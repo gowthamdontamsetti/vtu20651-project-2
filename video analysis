@@ -1,0 +1,135 @@
+#the project still on researxh level of the correct threshold value based on our research we have taken 60
+
+import cv2
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+from math import log10, log
+
+input_video_path = "/content/pexels-al-d'vilas-5656439 (1080p).mp4"
+output_frame_dir = '/content/video_frames'
+
+os.makedirs(output_frame_dir, exist_ok=True)
+
+video_capture = cv2.VideoCapture(input_video_path)
+frame_count = 0
+frame_rate = 1
+
+def line_graph_similarity(r, y):
+    if len(r) != len(y):
+        raise ValueError("Both line graphs should have the same number of data points.")
+    rmse = np.sqrt(np.mean((np.array(r) - np.array(y)) ** 2))
+    similarity_percentage = 100 - (rmse / max(r) * 100)
+    return similarity_percentage
+
+while True:
+    video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_count * frame_rate)
+    ret, frame = video_capture.read()
+    if not ret:
+        break
+    output_frame_path = os.path.join(output_frame_dir, f'frame_{frame_count:04d}.jpg')
+    cv2.imwrite(output_frame_path, frame)
+    frame_count += 1
+
+video_capture.release()
+print(f'{frame_count} frames saved to {output_frame_dir}')
+
+def line_graph_similarity(r, y):
+    if len(r) != len(y):
+        raise ValueError("Both line graphs should have the same number of data points.")
+    rmse = np.sqrt(np.mean((np.array(r) - np.array(y)) ** 2))
+    similarity_percentage = 100 - (rmse / max(r) * 100)
+    return similarity_percentage
+
+all_r = []
+all_y = []
+
+for frame_num in range(frame_count):
+    image_path = os.path.join(output_frame_dir, f'frame_{frame_num:04d}.jpg')
+
+    image = Image.open(image_path)
+    image = image.convert("L")
+    pixels = image.getdata()
+
+    a1 = []
+    a2 = []
+    a3 = []
+    a4 = []
+    a5 = []
+    a6 = []
+    a7 = []
+    a8 = []
+    a9 = []
+
+    for pixel in pixels:
+        s = str(pixel)
+        if int(s[0]) == 1:
+            a1.append(s[0])
+        elif int(s[0]) == 2:
+            a2.append(s[0])
+        elif int(s[0]) == 3:
+            a3.append(s[0])
+        elif int(s[0]) == 4:
+            a4.append(s[0])
+        elif int(s[0]) == 5:
+            a5.append(s[0])
+        elif int(s[0]) == 6:
+            a6.append(s[0])
+        elif int(s[0]) == 7:
+            a7.append(s[0])
+        elif int(s[0]) == 8:
+            a8.append(s[0])
+        elif int(s[0]) == 9:
+            a9.append(s[0])
+
+    li = [len(a1), len(a2), len(a3), len(a4), len(a5), len(a6), len(a7), len(a8), len(a9)]
+    s = sum(li)
+
+    y1 = len(a1) / s * 100
+    y2 = len(a2) / s * 100
+    y3 = len(a3) / s * 100
+    y4 = len(a4) / s * 100
+    y5 = len(a5) / s * 100
+    y6 = len(a6) / s * 100
+    y7 = len(a7) / s * 100
+    y8 = len(a8) / s * 100
+    y9 = len(a9) / s * 100
+
+    x = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    y = [y1, y2, y3, y4, y5, y6, y7, y8, y9]
+    all_y.append(y)
+
+    def benford(n):
+        return (log10(n + 1) - log10(n)) * 100
+
+    r = [benford(i) for i in range(1, 10)]
+    all_r.append(r)
+
+average_r = np.mean(all_r, axis=0)
+average_y = np.mean(all_y, axis=0)
+
+l = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+plt.plot(l, average_r, marker='*', label="Average Benford's Law", color='blue')
+plt.plot(l, average_y, label='Average Figure Data', marker='.', color='red')
+
+for i in range(len(l)):
+    plt.text(l[i], average_r[i], f"{average_r[i]:.2f}", ha='left', va='bottom')
+    plt.text(l[i], average_y[i], f"{average_y[i]:.2f}", ha='right', va='top')
+
+plt.legend()
+plt.grid()
+plt.xlabel('Digit')
+plt.ylabel('Frequency (%)')
+plt.title('Average Benford\'s Law Comparison')
+plt.show()
+
+similarity_percentage = line_graph_similarity(r, y)
+print(f"The similarity between the two line graphs is approximately {similarity_percentage:.2f}%.")
+
+threshold = 60
+
+if similarity_percentage > threshold:
+  print("legitimate video based on benford's law")
+else:
+  print("altered video based on benford's law")
